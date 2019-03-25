@@ -391,7 +391,7 @@ void appendTps(SQLHSTMT aStmt)
     {
         int sEq = 0;
         /* event time */
-        if (sTime - sLastLotTime > gLotProcessTime)
+        if (sTime - sLastLotTime >= gLotProcessTime)
         {
             sLastLotTime = sTime;
             addLotEqInfo(sLotEqStmt, sLastLotTime, &sInfo);
