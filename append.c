@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include <machbase_sqlcli.h>
 
-#define SPARAM_MAX_COLUMN       4
+#define SPARAM_MAX_COLUMN   4
 #define ERROR_CHECK_COUNT	100000
 #define RC_SUCCESS          	0
 #define RC_FAILURE          	-1
@@ -48,14 +48,14 @@ static long           gLotProcessTime;
 int                  gNoLotNo=0;
 
 static char *gEnvVarNames[] = { "TEST_EQUIP_CNT",
-                                "TEST_TAG_PER_EQ",
-                                "TEST_LOT_PROCESS_TIME",
-                                "TEST_MAX_ROWCNT",
-                                "TEST_DATA_TAG_PER_SEC",
-                                "TEST_TARGET_EPS",
-                                "TEST_PORT_NO",
-                                "TEST_SERVER_IP",
-                                NULL
+                          "TEST_TAG_PER_EQ",
+                          "TEST_LOT_PROCESS_TIME",
+                          "TEST_MAX_ROWCNT",
+                          "TEST_DATA_TAG_PER_SEC",
+                          "TEST_TARGET_EPS",
+                          "TEST_PORT_NO",
+                          "TEST_SERVER_IP",
+                          NULL
 };
 
 struct eq_lot_info
@@ -111,7 +111,7 @@ void printError(SQLHENV aEnv, SQLHDBC aCon, SQLHSTMT aStmt, char *aMsg)
     }
 
     if( SQLError(aEnv, aCon, aStmt, sSqlState, &sNativeError,
-                 sErrorMsg, SQL_MAX_MESSAGE_LENGTH, &sMsgLength) == SQL_SUCCESS )
+        sErrorMsg, SQL_MAX_MESSAGE_LENGTH, &sMsgLength) == SQL_SUCCESS )
     {
         printf("SQLSTATE-[%s], Machbase-[%d][%s]\n", sSqlState, sNativeError, sErrorMsg);
     }
@@ -125,7 +125,7 @@ int checkAppendError(SQLHENV aEnv, SQLHDBC aCon, SQLHSTMT aStmt)
     SQLSMALLINT     sMsgLength;
 
     if( SQLError(aEnv, aCon, aStmt, sSqlState, &sNativeError,
-                 sErrorMsg, SQL_MAX_MESSAGE_LENGTH, &sMsgLength) != SQL_SUCCESS )
+        sErrorMsg, SQL_MAX_MESSAGE_LENGTH, &sMsgLength) != SQL_SUCCESS )
     {
         return RC_FAILURE;
     }
@@ -143,11 +143,11 @@ int checkAppendError(SQLHENV aEnv, SQLHDBC aCon, SQLHSTMT aStmt)
 }
 
 void appendDumpError(SQLHSTMT    aStmt,
-                     SQLINTEGER  aErrorCode,
-                     SQLPOINTER  aErrorMessage,
-                     SQLLEN      aErrorBufLen,
-                     SQLPOINTER  aRowBuf,
-                     SQLLEN      aRowBufLen)
+                 SQLINTEGER  aErrorCode,
+                 SQLPOINTER  aErrorMessage,
+                 SQLLEN      aErrorBufLen,
+                 SQLPOINTER  aRowBuf,
+                 SQLLEN      aRowBufLen)
 {
     char       sErrMsg[1024] = {0, };
     char       sRowMsg[32 * 1024] = {0, };
@@ -189,14 +189,13 @@ int connectDB()
     }
 
     sprintf(sConnStr,"DSN=%s;UID=SYS;PWD=MANAGER;CONNTYPE=1;PORT_NO=%d", gTargetIP, gPortNo);
-    //sprintf(sConnStr,"DSN=%s;UID=IFLUX;PWD=MACHBASE;CONNTYPE=1;PORT_NO=%d", gTargetIP, gPortNo);
 
     if( SQLDriverConnect( gCon, NULL,
                           (SQLCHAR *)sConnStr,
                           SQL_NTS,
                           NULL, 0, NULL,
                           SQL_DRIVER_NOPROMPT ) != SQL_SUCCESS
-        )
+      )
     {
 
         printError(gEnv, gCon, NULL, "SQLDriverConnect error");
@@ -228,14 +227,13 @@ int connectOther()
     }
 
     sprintf(sConnStr,"DSN=%s;UID=SYS;PWD=MANAGER;CONNTYPE=1;PORT_NO=%d", gTargetIP, gPortNo);
-    //sprintf(sConnStr,"DSN=%s;UID=IFLUX;PWD=MACHBASE;CONNTYPE=1;PORT_NO=%d", gTargetIP, gPortNo);
 
     if( SQLDriverConnect( gLotDataConn, NULL,
                           (SQLCHAR *)sConnStr,
                           SQL_NTS,
                           NULL, 0, NULL,
                           SQL_DRIVER_NOPROMPT ) != SQL_SUCCESS
-        )
+      )
     {
 
         printError(gEnv, gLotDataConn, NULL, "SQLDriverConnect error");
@@ -304,11 +302,11 @@ void addLotEqInfo(SQLHSTMT aStmt, long aCurrentTime,
         sParam[3].mDateTime.mTime = aCurrentTime;
         // * LotNo
         sParam[4].mLong = (long)(i + aInfo->mLastLot);
-#ifdef DEBUG
+        #ifdef DEBUG
         printf("LotID %s, EqID %s, Begin %ld, End %ld, LotNo %d\n",
                sLotName, sEqName, aInfo->mLastTime, aCurrentTime,
                i+aInfo->mLastLot);
-#endif
+        #endif
         sRC = SQLAppendDataV2(aStmt, sParam);
         CHECK_APPEND_RESULT(sRC, gEnv, gLotDataConn, aStmt);
         SQLAppendFlush(aStmt);
@@ -327,7 +325,6 @@ int getCurrentLotNo(struct eq_lot_info *aInfo,
 
 void appendTps(SQLHSTMT aStmt)
 {
-//    SQL_APPEND_PARAM sParam[SPARAM_MAX_COLUMN];
     SQL_APPEND_PARAM *sParam;
     SQLRETURN        sRC;
     SQLHSTMT         sLotEqStmt;
@@ -341,8 +338,8 @@ void appendTps(SQLHSTMT aStmt)
     int               year,month,hour,min,sec,day;
 
     struct tm         sTm;
-    unsigned long     sTime;
-    int               sInterval;
+    long              sTime;
+    long              sInterval;
     long              StartTime;
     long              sLastLotTime;
     struct eq_lot_info sInfo;
@@ -351,7 +348,7 @@ void appendTps(SQLHSTMT aStmt)
     year     =    2017;
     month    =    0;
     day      =    1;
-    hour     =    1;
+    hour     =    0;
     min      =    0;
     sec      =    0;
 
@@ -376,7 +373,7 @@ void appendTps(SQLHSTMT aStmt)
         sParam = malloc(sizeof(SQL_APPEND_PARAM) * 3);
         memset(sParam, 0, sizeof(SQL_APPEND_PARAM)*3);
     }
-    sInterval = (int)(1000000000/gDataPerSec); // 100ms default.
+    sInterval = (1000000000l/gDataPerSec); // 100ms default.
     if (SQLAllocStmt(gLotDataConn, &sLotEqStmt) != SQL_SUCCESS)
     {
         printf("AllocStmtError\n");
@@ -385,17 +382,16 @@ void appendTps(SQLHSTMT aStmt)
     if (SQLAppendOpen(sLotEqStmt, "PROCESS_DATA", ERROR_CHECK_COUNT)
         != SQL_SUCCESS)
     {
-        printf("AppendOpenError\n");
-        exit(-1);
+            printf("AppendOpenError\n");
+            exit(-1);
     }
     StartTime = getTimeStamp();
-    init_eq_lot_info(&sInfo, sTime - gLotProcessTime, gEquipCnt);
+    init_eq_lot_info(&sInfo, sTime, gEquipCnt);
     for( i = 0; (gMaxData == 0) || sBreak == 0; i++ )
     {
         int sEq = 0;
         /* event time */
-        //sTime = sTime + sInterval;
-        if ( ((long)sLastLotTime + (long)gLotProcessTime) > (long)sTime)
+        if (sTime - sLastLotTime > gLotProcessTime)
         {
             sLastLotTime = sTime;
             addLotEqInfo(sLotEqStmt, sLastLotTime, &sInfo);
@@ -479,10 +475,10 @@ void appendTps(SQLHSTMT aStmt)
     }
 
 /*
-  printf("====================================================\n");
-  printf("total time : %ld sec\n", sEndTime - sStartTime);
-  printf("average tps : %f \n", ((float)gMaxData/(sEndTime - sStartTime)));
-  printf("====================================================\n");
+   printf("====================================================\n");
+   printf("total time : %ld sec\n", sEndTime - sStartTime);
+   printf("average tps : %f \n", ((float)gMaxData/(sEndTime - sStartTime)));
+   printf("====================================================\n");
 */
 exit:
     return;
@@ -533,7 +529,7 @@ int SetGlobalVariables()
         goto error;
     i++;
     gLotProcessTime = atoll(sEnvVar);
-    gLotProcessTime = (long)gLotProcessTime * MACHBASE_UINT64_LITERAL(1000000000); 
+    gLotProcessTime = (long)gLotProcessTime * MACHBASE_UINT64_LITERAL(1000000000);
 
     sEnvVar = getenv(gEnvVarNames[i]);
     if (sEnvVar == NULL)
