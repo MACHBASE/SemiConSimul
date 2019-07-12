@@ -10,7 +10,7 @@ from machbaseAPI import machbase
 
 def get_eq_by_tag(db, tag_name):
     db = machbase()
-    if db.open('127.0.0.1','SYS','MANAGER',34000) is 0 :
+    if db.open('127.0.0.1','SYS','MANAGER',5656) is 0 :
         return db.result()
     query = "select equipment_id from tag_equipment where tag_name = '" + tag_name + "';"
     if db.execute(query) is 0:
@@ -58,7 +58,7 @@ def query_eq_lot(db, eq, lot_id):
 
 if __name__=="__main__":
     db = machbase()
-    if db.open('127.0.0.1','SYS','MANAGER',34000) is 0 :
+    if db.open('127.0.0.1','SYS','MANAGER',5656) is 0 :
         print("error connection")
     print get_eq_by_tag(db, "EQ0^TAG1")
     print get_time_lotno_by_eq_lotid(db, get_eq_by_tag(db, "EQ0^TAG1"), "LOT100")
