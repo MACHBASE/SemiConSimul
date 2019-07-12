@@ -16,7 +16,7 @@
 #define RC_SUCCESS         	0
 #define RC_FAILURE         -1
 
-#define PORT_NO             34000
+#define PORT_NO             5656
 
 #define UNUSED(aVar) do { (void)(aVar); } while(0)
 
