@@ -13,10 +13,10 @@
 
 #define SPARAM_MAX_COLUMN   4
 #define ERROR_CHECK_COUNT	100000
-#define RC_SUCCESS          	0
-#define RC_FAILURE          	-1
+#define RC_SUCCESS         	0
+#define RC_FAILURE         -1
 
-#define PORT_NO                 5656
+#define PORT_NO             5656
 
 #define UNUSED(aVar) do { (void)(aVar); } while(0)
 
@@ -25,7 +25,7 @@
     {                                                           \
         if( checkAppendError(aEnv, aCon, aSTMT) == RC_FAILURE ) \
         {                                                       \
-            ;                                                   \
+           return RC_FAILURE;                                   \
         }                                                       \
     }
 
@@ -34,28 +34,28 @@ typedef struct tm timestruct;
 
 SQLHENV 	gEnv;
 SQLHDBC 	gCon;
-SQLHDBC         gLotDataConn;
+SQLHDBC     gLotDataConn;
 
 static char          gTargetIP[16];
 static int           gPortNo=PORT_NO;
 static unsigned long gMaxData=0;
-static long gTps=3000000;
+static long          gTps=3000000;
 static char          gTable[64]="TAG";
 static int           gEquipCnt;
 static int           gTagPerEq;
 static int           gDataPerSec;
-static long           gLotProcessTime;
+static long          gLotProcessTime;
 int                  gNoLotNo=0;
 
 static char *gEnvVarNames[] = { "TEST_EQUIP_CNT",
-                          "TEST_TAG_PER_EQ",
-                          "TEST_LOT_PROCESS_TIME",
-                          "TEST_MAX_ROWCNT",
-                          "TEST_DATA_TAG_PER_SEC",
-                          "TEST_TARGET_EPS",
-                          "TEST_PORT_NO",
-                          "TEST_SERVER_IP",
-                          NULL
+                                "TEST_TAG_PER_EQ",
+                                "TEST_LOT_PROCESS_TIME",
+                                "TEST_MAX_ROWCNT",
+                                "TEST_DATA_TAG_PER_SEC",
+                                "TEST_TARGET_EPS",
+                                "TEST_PORT_NO",
+                                "TEST_SERVER_IP",
+                                 NULL
 };
 
 struct eq_lot_info
@@ -68,8 +68,6 @@ time_t getTimeStamp();
 void printError(SQLHENV aEnv, SQLHDBC aCon, SQLHSTMT aStmt, char *aMsg);
 int connectDB();
 void disconnectDB();
-int executeDirectSQL(const char *aSQL, int aErrIgnore);
-int createTable();
 int appendOpen(SQLHSTMT aStmt);
 int appendData(SQLHSTMT aStmt);
 unsigned long appendClose(SQLHSTMT aStmt);
@@ -188,7 +186,7 @@ int connectDB()
         return RC_FAILURE;
     }
 
-    sprintf(sConnStr,"DSN=%s;UID=SYS;PWD=MANAGER;CONNTYPE=1;PORT_NO=%d", gTargetIP, gPortNo);
+    sprintf(sConnStr,"SERVER=%s;UID=SYS;PWD=MANAGER;CONNTYPE=1;PORT_NO=%d", gTargetIP, gPortNo);
 
     if( SQLDriverConnect( gCon, NULL,
                           (SQLCHAR *)sConnStr,
@@ -226,7 +224,7 @@ int connectOther()
         return RC_FAILURE;
     }
 
-    sprintf(sConnStr,"DSN=%s;UID=SYS;PWD=MANAGER;CONNTYPE=1;PORT_NO=%d", gTargetIP, gPortNo);
+    sprintf(sConnStr,"SERVER=%s;UID=SYS;PWD=MANAGER;CONNTYPE=1;PORT_NO=%d", gTargetIP, gPortNo);
 
     if( SQLDriverConnect( gLotDataConn, NULL,
                           (SQLCHAR *)sConnStr,
@@ -276,14 +274,14 @@ int appendOpen(SQLHSTMT aStmt)
 }
 
 //#define DEBUG
-void addLotEqInfo(SQLHSTMT aStmt, long aCurrentTime,
-                  struct eq_lot_info *aInfo)
+void addLotEqInfo(SQLHSTMT sLotEqStmt, long aCurrentTime, struct eq_lot_info *aInfo)
 {
-    int i;
+    int              i;
     SQL_APPEND_PARAM sParam[5];
-    char sEqName[20];
-    char sLotName[20];
-    for (i = 0; i < gEquipCnt;i++)
+    char             sEqName[20];
+    char             sLotName[20];
+    
+    for (i = 0; i < gEquipCnt; i++)
     {
         SQLRETURN sRC;
         sEqName[0] = 0;
@@ -307,9 +305,9 @@ void addLotEqInfo(SQLHSTMT aStmt, long aCurrentTime,
                sLotName, sEqName, aInfo->mLastTime, aCurrentTime,
                i+aInfo->mLastLot);
         #endif
-        sRC = SQLAppendDataV2(aStmt, sParam);
-        CHECK_APPEND_RESULT(sRC, gEnv, gLotDataConn, aStmt);
-        SQLAppendFlush(aStmt);
+        sRC = SQLAppendDataV2(sLotEqStmt, sParam);
+        CHECK_APPEND_RESULT(sRC, gEnv, gLotDataConn, sLotEqStmt);
+        SQLAppendFlush(sLotEqStmt);
     }
     aInfo->mLastTime = aCurrentTime;
     aInfo->mLastLot++;
@@ -331,10 +329,9 @@ void appendTps(SQLHSTMT aStmt)
     unsigned long    i;
     int j,p;
     unsigned long    sRecCount = 0;
-    char	     sTagName[20];
+    char	         sTagName[20];
     int              sTag;
     double           sValue;
-
     int               year,month,hour,min,sec,day;
 
     struct tm         sTm;
@@ -363,6 +360,7 @@ void appendTps(SQLHSTMT aStmt)
     sTime = sTime * MACHBASE_UINT64_LITERAL(1000000000); 
 
     sLastLotTime = sTime;
+    
     if (gNoLotNo == 0)
     {
         sParam = malloc(sizeof(SQL_APPEND_PARAM) * 4);
@@ -373,30 +371,37 @@ void appendTps(SQLHSTMT aStmt)
         sParam = malloc(sizeof(SQL_APPEND_PARAM) * 3);
         memset(sParam, 0, sizeof(SQL_APPEND_PARAM)*3);
     }
+    
     sInterval = (1000000000l/gDataPerSec); // 100ms default.
+    
     if (SQLAllocStmt(gLotDataConn, &sLotEqStmt) != SQL_SUCCESS)
     {
         printf("AllocStmtError\n");
         exit(-1);
     }
-    if (SQLAppendOpen(sLotEqStmt, "PROCESS_DATA", ERROR_CHECK_COUNT)
+ 
+    if (SQLAppendOpen(sLotEqStmt,"PROCESS_DATA", ERROR_CHECK_COUNT)
         != SQL_SUCCESS)
     {
             printf("AppendOpenError\n");
             exit(-1);
     }
+    
     StartTime = getTimeStamp();
+    
     init_eq_lot_info(&sInfo, sTime, gEquipCnt);
+    
     for( i = 0; (gMaxData == 0) || sBreak == 0; i++ )
     {
         int sEq = 0;
+    
         /* event time */
         if (sTime - sLastLotTime >= gLotProcessTime)
         {
             sLastLotTime = sTime;
             addLotEqInfo(sLotEqStmt, sLastLotTime, &sInfo);
         }
-	for( j=0; j< (gEquipCnt * gTagPerEq); j++)
+	    for( j=0; j< (gEquipCnt * gTagPerEq); j++)
         {
             /* tag_id */
             //sTag = (rand()%100);
@@ -442,10 +447,12 @@ void appendTps(SQLHSTMT aStmt)
                     sValue = (rand()%20000)/100.0; //0 ~ 200
                     break;
             }
+            
             sParam[2].mDouble       = sValue;
             sRC = SQLAppendDataV2(aStmt, sParam);
             sRecCount++;
             CHECK_APPEND_RESULT(sRC, gEnv, gCon, aStmt);
+            
             if ((gTps != 0) && (sRecCount % 10 == 0))
             {
                 long usecperev = 1000000/gTps;
@@ -461,11 +468,13 @@ void appendTps(SQLHSTMT aStmt)
                     nanosleep(&sleept, &leftt);
                 }
             }
+            
             if (sTag % gTagPerEq == 0 && sTag != 0)
             {
                 sEq ++;
                 if (sEq == gEquipCnt) sEq = 0;
             }
+            
             if (sRecCount > gMaxData)
             {
                 goto exit;

@@ -4,7 +4,7 @@
 # * All Rights reserved.
 # ******************************************************************************
 
- import re
+import re
 import json
 from machbaseAPI import machbase
 
@@ -12,7 +12,7 @@ def get_eq_by_tag(db, tag_name):
     db = machbase()
     if db.open('127.0.0.1','SYS','MANAGER',5656) is 0 :
         return db.result()
-    query = "select equipment_id from tag_equipment where tag_name = '"+tag_name + "'"
+    query = "select equipment_id from tag_equipment where tag_name = '" + tag_name + "';"
     if db.execute(query) is 0:
        return db.result()
     result = db.result()
@@ -22,7 +22,7 @@ def get_eq_by_tag(db, tag_name):
     return result
 
 def get_time_lotno_by_eq_lotid(db, eq_id, lot_id):
-    query = "select enter_time, out_time, lot_no from process_data where lot_id = '" + lot_id + "' AND equipment_id = '"+eq_id +"'"
+    query = "select enter_time, out_time, lot_no from process_data where lot_id = '" + lot_id + "' AND equipment_id = '"+ eq_id +"';"
     print query
     if db.execute(query) is 0:
        return db.result()
@@ -35,7 +35,7 @@ def get_time_lotno_by_eq_lotid(db, eq_id, lot_id):
     return [t1, t2, n3]
 
 def get_tagdata_by_tagtime_lotno(db, tag, tfrom, to, lot_no):
-    query = "select * from tag where name = '" + tag + "' and time between to_date('" + tfrom + "') and to_date('" + to+"')" + "and lot_no = " + lot_no;
+    query = "select * from tag where name = '" + tag + "' AND time between to_date('" + tfrom + "') AND to_date('" + to + "') AND lot_no = " + lot_no + ";"
     if db.execute(query) is 0:
        return db.result()
     result = db.result()
@@ -44,7 +44,7 @@ def get_tagdata_by_tagtime_lotno(db, tag, tfrom, to, lot_no):
     return result
 
 def query_eq_lot(db, eq, lot_id):
-    querytagname = "select tag_name from tag_equipment where equipment_id = '"+eq+"'"
+    querytagname = "select tag_name from tag_equipment where equipment_id = '"+eq+"';"
     tfrom, to, lot_no = get_time_lotno_by_eq_lotid(db, eq, lot_id)
     if db.execute(querytagname) is 0:
        return db.result()
@@ -59,11 +59,11 @@ def query_eq_lot(db, eq, lot_id):
 if __name__=="__main__":
     db = machbase()
     if db.open('127.0.0.1','SYS','MANAGER',5656) is 0 :
-        print("eror connection")
+        print("error connection")
     print get_eq_by_tag(db, "EQ0^TAG1")
-    print get_time_lotno_by_eq_lotid(db, get_eq_by_tag(db, "EQ0^TAG1"), "LOT101")
-    tfrom, to, lot_no =  get_time_lotno_by_eq_lotid(db, get_eq_by_tag(db, "EQ0^TAG1"), "LOT101")
+    print get_time_lotno_by_eq_lotid(db, get_eq_by_tag(db, "EQ0^TAG1"), "LOT100")
+    tfrom, to, lot_no = get_time_lotno_by_eq_lotid(db, get_eq_by_tag(db, "EQ0^TAG1"), "LOT100")
     print get_tagdata_by_tagtime_lotno(db, "EQ0^TAG1", tfrom, to, lot_no)
-    print(query_eq_lot(db, "EQ0", "LOT202"))
+    print(query_eq_lot(db, "EQ0", "LOT100"))
     if db.close() is 0 :
        print("disconnect error")
