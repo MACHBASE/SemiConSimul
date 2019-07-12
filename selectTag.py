@@ -62,7 +62,7 @@ if __name__=="__main__":
         print("error connection")
     print get_eq_by_tag(db, "EQ0^TAG1")
     print get_time_lotno_by_eq_lotid(db, get_eq_by_tag(db, "EQ0^TAG1"), "LOT100")
-    tfrom, to, lot_no =  get_time_lotno_by_eq_lotid(db, get_eq_by_tag(db, "EQ0^TAG1"), "LOT100")
+    tfrom, to, lot_no = get_time_lotno_by_eq_lotid(db, get_eq_by_tag(db, "EQ0^TAG1"), "LOT100")
     print get_tagdata_by_tagtime_lotno(db, "EQ0^TAG1", tfrom, to, lot_no)
     print(query_eq_lot(db, "EQ0", "LOT100"))
     if db.close() is 0 :

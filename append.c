@@ -14,7 +14,7 @@
 #define SPARAM_MAX_COLUMN   4
 #define ERROR_CHECK_COUNT	100000
 #define RC_SUCCESS         	0
-#define RC_FAILURE         	-1
+#define RC_FAILURE         -1
 
 #define PORT_NO             34000
 
@@ -48,14 +48,14 @@ static long          gLotProcessTime;
 int                  gNoLotNo=0;
 
 static char *gEnvVarNames[] = { "TEST_EQUIP_CNT",
-                          "TEST_TAG_PER_EQ",
-                          "TEST_LOT_PROCESS_TIME",
-                          "TEST_MAX_ROWCNT",
-                          "TEST_DATA_TAG_PER_SEC",
-                          "TEST_TARGET_EPS",
-                          "TEST_PORT_NO",
-                          "TEST_SERVER_IP",
-                          NULL
+                                "TEST_TAG_PER_EQ",
+                                "TEST_LOT_PROCESS_TIME",
+                                "TEST_MAX_ROWCNT",
+                                "TEST_DATA_TAG_PER_SEC",
+                                "TEST_TARGET_EPS",
+                                "TEST_PORT_NO",
+                                "TEST_SERVER_IP",
+                                 NULL
 };
 
 struct eq_lot_info
@@ -332,7 +332,6 @@ void appendTps(SQLHSTMT aStmt)
     char	         sTagName[20];
     int              sTag;
     double           sValue;
-    const char       *sTableName2 = "PROCESS_DATA";
     int               year,month,hour,min,sec,day;
 
     struct tm         sTm;
@@ -380,8 +379,8 @@ void appendTps(SQLHSTMT aStmt)
         printf("AllocStmtError\n");
         exit(-1);
     }
-    
-    if (SQLAppendOpen(sLotEqStmt, (SQLCHAR *)sTableName2, ERROR_CHECK_COUNT)
+ 
+    if (SQLAppendOpen(sLotEqStmt,"PROCESS_DATA", ERROR_CHECK_COUNT)
         != SQL_SUCCESS)
     {
             printf("AppendOpenError\n");
@@ -395,7 +394,7 @@ void appendTps(SQLHSTMT aStmt)
     for( i = 0; (gMaxData == 0) || sBreak == 0; i++ )
     {
         int sEq = 0;
-        
+    
         /* event time */
         if (sTime - sLastLotTime >= gLotProcessTime)
         {
